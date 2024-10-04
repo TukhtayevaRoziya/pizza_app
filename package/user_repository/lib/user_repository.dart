@@ -1,3 +1,5 @@
 library user_repository;
 
-export '';
+export 'src/entities/entities.dart';
+export 'src/models/models.dart';
+export 'src/user_repo.dart';
