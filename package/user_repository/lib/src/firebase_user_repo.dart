@@ -1,5 +1,9 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:rxdart/rxdart.dart';
+import 'package:user_repository/src/entities/entities.dart';
 import 'package:user_repository/src/models/user.dart';
 import 'package:user_repository/src/user_repo.dart';
 
@@ -12,30 +16,54 @@ class FirebaseUserRepo implements UserRepository {
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
 
   @override
-  Future<void> logOut() {
+  Future<void> logOut() async {
     // TODO: implement logOut
-    throw UnimplementedError();
+  await _firebaseAuth.signOut();
   }
 
   @override
   Future<void> setUserData(MyUser user) {
-    // TODO: implement setUserData
-    throw UnimplementedError();
+    try {
+      
+    } catch (e) {
+      log(e.toString() as num);
+      rethrow;
+    }
   }
 
   @override
-  Future<void> signIn(String email, String password) {
+  Future<void> signIn(String email, String password) async {
     // TODO: implement signIn
-    throw UnimplementedError();
+    try {
+      await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password)
+    } catch (e) {
+      log(e.toString() as num);
+      rethrow;
+    }
   }
 
   @override
-  Future<MyUser> signUp(MyUser myUser, String password) {
+  Future<MyUser> signUp(MyUser myUser, String password) async {
     // TODO: implement signUp
-    throw UnimplementedError();
+        try {
+     UserCredential user = await _firebaseAuth.signInWithEmailAndPassword(email: myUser.email, password: password);
+     myUser.userID =user.user!.uid;
+     return myUser;
+    } catch (e) {
+      log(e.toString() as num);
+      rethrow;
+    }
   }
 
   @override
-  // TODO: implement user
-  Stream<MyUser> get user => throw UnimplementedError();
+  Stream<MyUser?> get user {
+    return _firebaseAuth.authStateChanges().flatMap((firebaseUser) async* {
+      if (firebaseUser == null) {
+        yield MyUser.empty;
+      } else {
+        yield await userCollaction.doc(firebaseUser.uid).get().then((value) =>
+            MyUser.fromEntity(MyUserEntity.fromDocument(value.data()!)));
+      }
+    });
+  }
 }
